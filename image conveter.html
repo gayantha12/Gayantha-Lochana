@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styl.css">
+
+    
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Image Converter</h1>
+
+        <div class="file-input-wrapper mb-6" id="drop-area">
+            <input type="file" id="image-input" accept="image/*" multiple>
+            <div class="icon">???</div>
+            <p class="text">Drag & Drop your images here, or click to select files</p>
+            <p class="text-sm text-gray-400 mt-2">Supports JPG, PNG, GIF, BMP, WebP, TIFF, ICO</p>
+        </div>
+
+        <div id="file-list" class="mb-6 text-left">
+            <!-- Selected files will be listed here -->
+        </div>
+
+        <div class="mb-6">
+            <label for="output-format" class="block text-left text-gray-700 text-sm font-medium mb-2">Convert to:</label>
+            <div class="select-wrapper">
+                <select id="output-format" class="block w-full px-4 py-3 text-base text-gray-900 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="png">PNG</option>
+                    <option value="jpeg">JPEG</option>
+                    <option value="webp">WebP</option>
+                    <option value="gif">GIF (Static Image)</option>
+                    <option value="bmp">BMP (Static Image)</option>
+                    <option value="ico">ICO (Static Image)</option>
+                </select>
+            </div>
+        </div>
+
+        <button id="convert-button" class="button-primary w-full py-3 mb-6">Convert Images</button>
+
+        <div id="output-area" class="text-left">
+            <!-- Converted image links will appear here -->
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box" class="message-box">
+        <h3 id="message-box-title" class="text-xl font-semibold"></h3>
+        <p id="message-box-content"></p>
+        <button id="message-box-close">OK</button>
+    </div>
+
+    <script>
+        // Get DOM elements
+        const dropArea = document.getElementById('drop-area');
+        const imageInput = document.getElementById('image-input');
+        const fileList = document.getElementById('file-list');
+        const outputFormatSelect = document.getElementById('output-format');
+        const convertButton = document.getElementById('convert-button');
+        const outputArea = document.getElementById('output-area');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const messageBox = document.getElementById('message-box');
+        const messageBoxTitle = document.getElementById('message-box-title');
+        const messageBoxContent = document.getElementById('message-box-content');
+        const messageBoxCloseButton = document.getElementById('message-box-close');
+
+        let selectedFiles = []; // Array to store selected File objects
+
+        // Function to show a custom message box
+        function showMessageBox(title, message) {
+            messageBoxTitle.textContent = title;
+            messageBoxContent.textContent = message;
+            messageBox.classList.add('visible');
+        }
+
+        // Function to hide the custom message box
+        function hideMessageBox() {
+            messageBox.classList.remove('visible');
+        }
+
+        // Event listener for closing the message box
+        messageBoxCloseButton.addEventListener('click', hideMessageBox);
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default for entire body
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area when dragging over
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('border-indigo-500', 'bg-indigo-50'), false);
+        });
+
+        // Remove highlight when drag leaves
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('border-indigo-500', 'bg-indigo-50'), false);
+        });
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        // Handle file input change (when user clicks and selects files)
+        imageInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        // Function to process selected files
+        function handleFiles(files) {
+            selectedFiles = []; // Clear previous selection
+            fileList.innerHTML = ''; // Clear previous list
+
+            if (files.length === 0) {
+                showMessageBox('No Files Selected', 'Please select one or more image files to convert.');
+                return;
+            }
+
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) {
+                    showMessageBox('Invalid File Type', `File "${file.name}" is not an image. Only image files are supported.`);
+                    continue;
+                }
+                selectedFiles.push(file);
+                const listItem = document.createElement('div');
+                listItem.className = 'flex items-center justify-between p-2 mb-1 bg-gray-50 rounded-md shadow-sm text-sm text-gray-700';
+                listItem.innerHTML = `
+                    <span>${file.name}</span>
+                    <span class="text-gray-500">${(file.size / 1024).toFixed(2)} KB</span>
+                `;
+                fileList.appendChild(listItem);
+            }
+
+            if (selectedFiles.length > 0) {
+                convertButton.disabled = false;
+                convertButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            } else {
+                convertButton.disabled = true;
+                convertButton.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Initial state: disable convert button if no files are selected
+        if (selectedFiles.length === 0) {
+            convertButton.disabled = true;
+            convertButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Convert button click handler
+        convertButton.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) {
+                showMessageBox('No Images Selected', 'Please select image files before attempting to convert.');
+                return;
+            }
+
+            showLoading();
+            outputArea.innerHTML = ''; // Clear previous output
+
+            const outputFormat = outputFormatSelect.value;
+            const mimeTypeMap = {
+                'png': 'image/png',
+                'jpeg': 'image/jpeg',
+                'webp': 'image/webp',
+                'gif': 'image/png', // Canvas.toDataURL only supports PNG, JPEG, WebP. For GIF, BMP, ICO, we'll convert to PNG and rename.
+                'bmp': 'image/png',
+                'ico': 'image/png'
+            };
+            const targetMimeType = mimeTypeMap[outputFormat];
+
+            for (const file of selectedFiles) {
+                try {
+                    const convertedDataUrl = await convertImage(file, targetMimeType);
+                    const originalFileName = file.name.split('.').slice(0, -1).join('.'); // Get file name without extension
+                    const newFileName = `${originalFileName}.${outputFormat}`;
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = convertedDataUrl;
+                    downloadLink.download = newFileName;
+                    downloadLink.className = 'block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg mb-2 transition-colors duration-200';
+                    downloadLink.textContent = `Download ${newFileName}`;
+
+                    outputArea.appendChild(downloadLink);
+
+                    // Add a note for formats not natively supported by toDataURL
+                    if (['gif', 'bmp', 'ico'].includes(outputFormat)) {
+                        const note = document.createElement('p');
+                        note.className = 'text-sm text-gray-500 mt-1 mb-3';
+                        note.textContent = `Note: For ${outputFormat.toUpperCase()}, the image was converted to PNG data and renamed. True ${outputFormat.toUpperCase()} conversion (e.g., animated GIF) requires more advanced libraries.`;
+                        outputArea.appendChild(note);
+                    }
+
+                } catch (error) {
+                    console.error(`Error converting ${file.name}:`, error);
+                    showMessageBox('Conversion Error', `Failed to convert "${file.name}". Please try another file or format. Error: ${error.message}`);
+                }
+            }
+            hideLoading();
+        });
+
+        /**
+         * Converts an image file to a specified MIME type using a canvas.
+         * @param {File} file - The image file to convert.
+         * @param {string} targetMimeType - The target MIME type (e.g., 'image/png', 'image/jpeg', 'image/webp').
+         * @returns {Promise<string>} A Promise that resolves with the data URL of the converted image.
+         */
+        function convertImage(file, targetMimeType) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+
+                        ctx.drawImage(img, 0, 0);
+
+                        try {
+                            // Attempt to get data URL in targetMimeType
+                            const dataUrl = canvas.toDataURL(targetMimeType);
+                            resolve(dataUrl);
+                        } catch (e) {
+                            // Fallback if targetMimeType is not directly supported by toDataURL
+                            // This might happen for formats like BMP, GIF, ICO if the browser's implementation is strict.
+                            // In this case, we'll try to convert to PNG as a reliable fallback.
+                            try {
+                                const dataUrl = canvas.toDataURL('image/png');
+                                resolve(dataUrl);
+                            } catch (fallbackError) {
+                                reject(new Error(`Could not convert image to ${targetMimeType} or PNG. ${fallbackError.message}`));
+                            }
+                        }
+                    };
+                    img.onerror = (error) => {
+                        reject(new Error(`Failed to load image: ${error.type}`));
+                    };
+                    img.src = event.target.result;
+                };
+
+                reader.onerror = (error) => {
+                    reject(new Error(`Failed to read file: ${error.target.error.code}`));
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Show loading overlay
+        function showLoading() {
+            loadingOverlay.classList.add('visible');
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            loadingOverlay.classList.remove('visible');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube to MP3 Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+     <link rel="stylesheet" href="styless.css">
+    
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">YouTube to MP3 Converter</h1>
+
+        <div class="mb-6">
+            <label for="youtube-url" class="block text-left text-gray-700 text-sm font-medium mb-2">YouTube Video URL:</label>
+            <input type="url" id="youtube-url" placeholder="Paste YouTube video link here..." class="mb-4">
+            <button id="convert-button" class="button-primary w-full py-3">Convert to MP3</button>
+        </div>
+
+        <div id="output-area" class="mt-6 text-left">
+            <!-- Download link or status messages will appear here -->
+        </div>
+
+        <p class="text-sm text-gray-500 mt-8">
+            Note: This is a client-side interface. Actual YouTube to MP3 conversion requires server-side processing due to browser security and API limitations.
+        </p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="message-box" class="message-box">
+        <h3 id="message-box-title" class="text-xl font-semibold"></h3>
+        <p id="message-box-content"></p>
+        <button id="message-box-close">OK</button>
+    </div>
+
+    <script>
+        const youtubeUrlInput = document.getElementById('youtube-url');
+        const convertButton = document.getElementById('convert-button');
+        const outputArea = document.getElementById('output-area');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const messageBox = document.getElementById('message-box');
+        const messageBoxTitle = document.getElementById('message-box-title');
+        const messageBoxContent = document.getElementById('message-box-content');
+        const messageBoxCloseButton = document.getElementById('message-box-close');
+
+        // Function to show a custom message box
+        function showMessageBox(title, message) {
+            messageBoxTitle.textContent = title;
+            messageBoxContent.textContent = message;
+            messageBox.classList.add('visible');
+        }
+
+        // Function to hide the custom message box
+        function hideMessageBox() {
+            messageBox.classList.remove('visible');
+        }
+
+        // Event listener for closing the message box
+        messageBoxCloseButton.addEventListener('click', hideMessageBox);
+
+        // Show loading overlay
+        function showLoading() {
+            loadingOverlay.classList.add('visible');
+        }
+
+        // Hide loading overlay
+        function hideLoading() {
+            loadingOverlay.classList.remove('visible');
+        }
+
+        convertButton.addEventListener('click', () => {
+            const youtubeUrl = youtubeUrlInput.value.trim();
+            outputArea.innerHTML = ''; // Clear previous output
+
+            if (!youtubeUrl) {
+                showMessageBox('Input Required', 'Please enter a YouTube video URL.');
+                return;
+            }
+
+            // Basic URL validation (can be more robust)
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
+            if (!youtubeRegex.test(youtubeUrl)) {
+                showMessageBox('Invalid URL', 'Please enter a valid YouTube video URL.');
+                return;
+            }
+
+            showLoading();
+
+            // --- IMPORTANT: This is where server-side logic would be needed ---
+            // In a real application, you would send the `youtubeUrl` to your backend server
+            // The server would then:
+            // 1. Download the video.
+            // 2. Extract the audio (e.g., using ffmpeg).
+            // 3. Convert the audio to MP3.
+            // 4. Provide a direct download link to the client.
+
+            // Simulate a server response delay and explain the limitation
+            setTimeout(() => {
+                hideLoading();
+                const message = document.createElement('p');
+                message.className = 'text-red-600 font-semibold';
+                message.innerHTML = `
+                    <p class="text-lg mb-2">Conversion Not Possible Client-Side</p>
+                    <p class="text-base text-gray-700">
+                        Direct YouTube to MP3 conversion cannot be done directly in your web browser due to security policies (CORS) and the complex processing required.
+                    </p>
+                    <p class="text-base text-gray-700 mt-2">
+                        A real converter would send this URL to a server for processing.
+                    </p>
+                `;
+                outputArea.appendChild(message);
+                showMessageBox('Conversion Info', 'Direct YouTube to MP3 conversion is not possible in the browser. Please read the message below for details.');
+            }, 2000); // Simulate network delay
+        });
+    </script>
+</body>
+</html>
