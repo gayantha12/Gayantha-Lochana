@@ -8,6 +8,29 @@
 </head>
 <body>
 
+<section id="login-section" class="section fade-in" style="text-align:center;">
+  <h2>User Login</h2>
+
+  <form id="email-login" style="max-width:400px;margin:auto;">
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="email" name="email" required class="form-control">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" name="password" required class="form-control">
+    </div>
+
+    <button type="submit" class="cta-button">Login with Email</button>
+  </form>
+
+  <div style="margin: 20px 0;">or</div>
+
+  <button id="google-signin" class="cta-button" style="background: #4285F4; color: white;">Sign in with Google</button>
+</section>
+
+
     <div class="bg-animation">
         <div class="floating-shapes">
             <div class="shape"></div>
@@ -386,5 +409,56 @@
     </footer>
 
     <script src="script.js"></script>
+
+
+
+
+
+    <!-- Firebase Core -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyD2kzUUUIX4OROl9CwMot-nPlh3UfBJDTc",
+    authDomain: "websitemy-a499f.firebaseapp.com",
+    projectId: "websitemy-a499f",
+    storageBucket: "websitemy-a499f.firebasestorage.app",
+    messagingSenderId: "881476130860",
+    appId: "1:881476130860:web:e269ede3c0b21a71e75989",
+    measurementId: "G-RDQHR572D0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // Google Sign-In
+  document.getElementById('google-signin').addEventListener('click', () => {
+    signInWithPopup(auth, provider)
+      .then(result => {
+        alert("Welcome " + result.user.displayName);
+      }).catch(error => {
+        alert("Error: " + error.message);
+      });
+  });
+
+  // Email Sign-In
+  document.getElementById('email-login').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        alert("Logged in as: " + userCredential.user.email);
+      })
+      .catch(error => {
+        alert("Error: " + error.message);
+      });
+  });
+</script>
 </body>
 </html>
+
+
