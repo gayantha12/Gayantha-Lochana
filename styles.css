@@ -1,3 +1,24 @@
+.bg-animation {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #000428, #004e92);
+    z-index: -1;
+    overflow: hidden;
+}
+
+.floating-shapes .shape {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    position: absolute;
+    animation: float 10s infinite ease-in-out;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+
+
 
 /* === VOICE TYPING SECTION === */
 #voice-typing .container,
