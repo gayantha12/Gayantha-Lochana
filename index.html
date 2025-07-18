@@ -380,32 +380,266 @@
         </div>
     </div>
 
-
+<!-- Updated Login Section -->
 <section id="login-section" class="section fade-in">
   <div class="login-container">
-    <h2>User Login</h2>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Sign In</button>
+      <button class="auth-tab" data-tab="register">Sign Up</button>
+    </div>
     
-    <form id="email-login" class="login-form">
+    <!-- Login Form -->
+    <form id="email-login" class="login-form auth-form active" data-form="login">
       <div class="form-group">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required class="form-control">
+        <label for="login-email">Email</label>
+        <input type="email" id="login-email" name="email" required class="form-control">
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required class="form-control">
+        <label for="login-password">Password</label>
+        <input type="password" id="login-password" name="password" required class="form-control">
+        <a href="#forgot-password" class="forgot-password">Forgot password?</a>
       </div>
 
-      <button type="submit" class="cta-button login-btn">Login with Email</button>
+      <button type="submit" class="cta-button login-btn">Sign In</button>
+    </form>
+
+    <!-- Registration Form -->
+    <form id="email-register" class="register-form auth-form" data-form="register">
+      <div class="form-group">
+        <label for="register-name">Full Name</label>
+        <input type="text" id="register-name" name="name" required class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" name="email" required class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="register-password">Password (min 8 characters)</label>
+        <input type="password" id="register-password" name="password" minlength="8" required class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="register-confirm">Confirm Password</label>
+        <input type="password" id="register-confirm" name="confirm" required class="form-control">
+      </div>
+
+      <button type="submit" class="cta-button register-btn">Create Account</button>
+    </form>
+
+    <!-- Phone Login Form -->
+    <form id="phone-login" class="phone-form auth-form" data-form="phone">
+      <div class="form-group">
+        <label for="phone-number">Phone Number</label>
+        <input type="tel" id="phone-number" name="phone" required class="form-control" placeholder="+94XXXXXXXXX">
+      </div>
+
+      <div class="form-group otp-group" style="display:none;">
+        <label for="otp-code">Verification Code</label>
+        <input type="text" id="otp-code" name="otp" class="form-control" placeholder="6-digit code">
+      </div>
+
+      <button type="submit" class="cta-button phone-btn" id="phone-submit">Send Verification Code</button>
+      <button type="button" class="cta-button otp-btn" id="verify-otp" style="display:none;">Verify Code</button>
     </form>
 
     <div class="login-divider">or</div>
 
-    <button id="google-signin" class="cta-button google-btn">
-      <i class="fab fa-google"></i> Sign in with Google
-    </button>
+    <div class="social-login">
+      <button id="google-signin" class="cta-button google-btn">
+        <i class="fab fa-google"></i> Continue with Google
+      </button>
+      <button id="facebook-signin" class="cta-button facebook-btn">
+        <i class="fab fa-facebook-f"></i> Continue with Facebook
+      </button>
+    </div>
   </div>
+  
+  <div id="auth-status" class="auth-status"></div>
 </section>
+
+<!-- Updated Firebase Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+  import { 
+    getAuth, 
+    GoogleAuthProvider, 
+    FacebookAuthProvider,
+    signInWithPopup, 
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signInWithPhoneNumber,
+    RecaptchaVerifier
+  } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD2kzUUUIX4OROl9CwMot-nPlh3UfBJDTc",
+    authDomain: "websitemy-a499f.firebaseapp.com",
+    projectId: "websitemy-a499f",
+    storageBucket: "websitemy-a499f.firebasestorage.app",
+    messagingSenderId: "881476130860",
+    appId: "1:881476130860:web:e269ede3c0b21a71e75989",
+    measurementId: "G-RDQHR572D0"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const googleProvider = new GoogleAuthProvider();
+  const facebookProvider = new FacebookAuthProvider();
+  
+  // Setup reCAPTCHA for phone auth
+  let recaptchaVerifier;
+  let confirmationResult;
+
+  // Initialize reCAPTCHA
+  function initRecaptcha() {
+    recaptchaVerifier = new RecaptchaVerifier(auth, 'phone-submit', {
+      'size': 'invisible',
+      'callback': () => {
+        // reCAPTCHA solved, allow sending SMS
+      }
+    });
+  }
+
+  // Tab switching
+  document.querySelectorAll('.auth-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      document.querySelectorAll('.auth-form').forEach(form => {
+        form.classList.remove('active');
+        if(form.dataset.form === tabName) {
+          form.classList.add('active');
+        }
+      });
+    });
+  });
+
+  // Email Login
+  document.getElementById('email-login').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    
+    signInWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        showAuthStatus(`Welcome back, ${userCredential.user.email}`, 'success');
+      })
+      .catch(error => {
+        showAuthStatus(getErrorMessage(error.code), 'error');
+      });
+  });
+
+  // Email Registration
+  document.getElementById('email-register').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const confirm = e.target.confirm.value;
+    
+    if(password !== confirm) {
+      showAuthStatus("Passwords don't match", 'error');
+      return;
+    }
+    
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(userCredential => {
+        showAuthStatus(`Account created for ${email}`, 'success');
+        // You can update user profile here if needed
+      })
+      .catch(error => {
+        showAuthStatus(getErrorMessage(error.code), 'error');
+      });
+  });
+
+  // Phone Login
+  document.getElementById('phone-login').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const phoneNumber = e.target.phone.value;
+    const otpCode = e.target.otp?.value;
+    
+    if(!confirmationResult) {
+      // First step - send verification code
+      try {
+        initRecaptcha();
+        confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, recaptchaVerifier);
+        document.querySelector('.otp-group').style.display = 'block';
+        document.getElementById('phone-submit').style.display = 'none';
+        document.getElementById('verify-otp').style.display = 'block';
+        showAuthStatus('Verification code sent to your phone', 'success');
+      } catch (error) {
+        showAuthStatus(getErrorMessage(error.code), 'error');
+      }
+    }
+  });
+
+  // Verify OTP
+  document.getElementById('verify-otp').addEventListener('click', async () => {
+    const otpCode = document.getElementById('otp-code').value;
+    
+    try {
+      const userCredential = await confirmationResult.confirm(otpCode);
+      showAuthStatus(`Phone verified: ${userCredential.user.phoneNumber}`, 'success');
+    } catch (error) {
+      showAuthStatus(getErrorMessage(error.code), 'error');
+    }
+  });
+
+  // Google Sign-In
+  document.getElementById('google-signin').addEventListener('click', () => {
+    signInWithPopup(auth, googleProvider)
+      .then(result => {
+        showAuthStatus(`Welcome ${result.user.displayName}`, 'success');
+      }).catch(error => {
+        showAuthStatus(getErrorMessage(error.code), 'error');
+      });
+  });
+
+  // Facebook Sign-In
+  document.getElementById('facebook-signin').addEventListener('click', () => {
+    signInWithPopup(auth, facebookProvider)
+      .then(result => {
+        showAuthStatus(`Welcome ${result.user.displayName}`, 'success');
+      }).catch(error => {
+        showAuthStatus(getErrorMessage(error.code), 'error');
+      });
+  });
+
+  // Helper function to show status messages
+  function showAuthStatus(message, type) {
+    const statusEl = document.getElementById('auth-status');
+    statusEl.textContent = message;
+    statusEl.className = `auth-status ${type}`;
+    
+    setTimeout(() => {
+      statusEl.textContent = '';
+      statusEl.className = 'auth-status';
+    }, 5000);
+  }
+
+  // Helper function to get user-friendly error messages
+  function getErrorMessage(errorCode) {
+    const messages = {
+      'auth/invalid-email': 'Invalid email address',
+      'auth/user-disabled': 'Account disabled',
+      'auth/user-not-found': 'Account not found',
+      'auth/wrong-password': 'Incorrect password',
+      'auth/email-already-in-use': 'Email already in use',
+      'auth/operation-not-allowed': 'Operation not allowed',
+      'auth/weak-password': 'Password should be at least 8 characters',
+      'auth/invalid-phone-number': 'Invalid phone number',
+      'auth/invalid-verification-code': 'Invalid verification code',
+      'auth/captcha-check-failed': 'reCAPTCHA verification failed',
+      'auth/too-many-requests': 'Too many attempts, try again later'
+    };
+    
+    return messages[errorCode] || 'Authentication error: ' + errorCode;
+  }
+</script>
 
 
     <footer>
@@ -419,50 +653,6 @@
 
 
 
-    <!-- Firebase Core -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
-
-  const firebaseConfig = {
-      apiKey: "AIzaSyD2kzUUUIX4OROl9CwMot-nPlh3UfBJDTc",
-    authDomain: "websitemy-a499f.firebaseapp.com",
-    projectId: "websitemy-a499f",
-    storageBucket: "websitemy-a499f.firebasestorage.app",
-    messagingSenderId: "881476130860",
-    appId: "1:881476130860:web:e269ede3c0b21a71e75989",
-    measurementId: "G-RDQHR572D0"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const provider = new GoogleAuthProvider();
-
-  // Google Sign-In
-  document.getElementById('google-signin').addEventListener('click', () => {
-    signInWithPopup(auth, provider)
-      .then(result => {
-        alert("Welcome " + result.user.displayName);
-      }).catch(error => {
-        alert("Error: " + error.message);
-      });
-  });
-
-  // Email Sign-In
-  document.getElementById('email-login').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = e.target.email.value;
-    const password = e.target.password.value;
-
-    signInWithEmailAndPassword(auth, email, password)
-      .then(userCredential => {
-        alert("Logged in as: " + userCredential.user.email);
-      })
-      .catch(error => {
-        alert("Error: " + error.message);
-      });
-  });
-</script>
 </body>
 </html>
 
