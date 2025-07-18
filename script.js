@@ -430,22 +430,4 @@ document.addEventListener('DOMContentLoaded', function() {
             throw error;
         }
     }
-    let isSigningIn = false;
-
-function signInWithGoogle() {
-  if (isSigningIn) return; // prevent multiple clicks
-
-  isSigningIn = true;
-
-  const provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider)
-    .then((result) => {
-      console.log("Signed in:", result.user);
-      isSigningIn = false;
-    })
-    .catch((error) => {
-      console.error("Error signing in:", error);
-      alert("Login failed: " + error.message);
-      isSigningIn = false;
-    });
-
+});
