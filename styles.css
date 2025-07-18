@@ -1,3 +1,119 @@
+/* Login Section Styles */
+#login-section {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 5rem 2rem;
+}
+
+.login-container {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.login-container h2 {
+  color: #00ff88;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+}
+
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.login-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.login-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #00ff88;
+  font-size: 0.9rem;
+}
+
+.login-form .form-control {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  transition: all 0.3s;
+}
+
+.login-form .form-control:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background: linear-gradient(45deg, #00ff88, #00ccff);
+  border: none;
+}
+
+.login-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 255, 136, 0.3);
+}
+
+.login-divider {
+  text-align: center;
+  margin: 1.5rem 0;
+  color: #ccc;
+  position: relative;
+}
+
+.login-divider:before,
+.login-divider:after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 45%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.login-divider:before {
+  left: 0;
+}
+
+.login-divider:after {
+  right: 0;
+}
+
+.google-btn {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background: #4285F4;
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.google-btn:hover {
+  background: #357ae8;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+}
+
+/* Add Font Awesome for Google icon */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css');
+
+
+
 .bg-animation {
     position: fixed;
     top: 0; left: 0;
